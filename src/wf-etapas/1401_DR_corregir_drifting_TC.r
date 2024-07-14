@@ -38,7 +38,7 @@ drift_deflacion <- function(campos_monetarios) {
     202101, 202102, 202103, 202104, 202105, 202106,
     202107, 202108, 202109
   )
-
+  
   vIPC <- c(
     1.9903030878, 1.9174403544, 1.8296186587,
     1.7728862972, 1.7212488323, 1.6776304408,
@@ -52,18 +52,59 @@ drift_deflacion <- function(campos_monetarios) {
     0.8532444140, 0.8251880213, 0.8003763543,
     0.7763107219, 0.7566381305, 0.7289384687
   )
-
+  
   tb_IPC <- as.data.table( list( vfoto_mes, vIPC) )
-
- colnames( tb_IPC ) <- c( envg$PARAM$dataset_metadata$periodo, "IPC" )
-
+  
+  colnames( tb_IPC ) <- c( envg$PARAM$dataset_metadata$periodo, "IPC" )
+  
   dataset[tb_IPC,
-    on = c(envg$PARAM$dataset_metadata$periodo),
-    (campos_monetarios) := .SD * i.IPC,
-    .SDcols = campos_monetarios
+          on = c(envg$PARAM$dataset_metadata$periodo),
+          (campos_monetarios) := .SD * i.IPC,
+          .SDcols = campos_monetarios
   ]
-
+  
   cat( "fin drift_deflacion()\n")
+}
+#------------------------------------------------------------------------------
+# corrige por dólar blue
+# momento 1.0  31-dic-2020 a las 23:59
+
+drift_dolarb <- function(campos_monetarios) {
+  cat( "inicio drift_dolarb()\n")
+  vfoto_mes <- c(
+    201901, 201902, 201903, 201904, 201905, 201906,
+    201907, 201908, 201909, 201910, 201911, 201912,
+    202001, 202002, 202003, 202004, 202005, 202006,
+    202007, 202008, 202009, 202010, 202011, 202012,
+    202101, 202102, 202103, 202104, 202105, 202106,
+    202107, 202108, 202109
+  )
+  
+  vDOLB <- c(
+    4.4266666667, 4.2564102564, 3.8029782360,
+    3.6086956522, 3.6086956522, 3.7899543379,
+    3.6725663717, 2.6349206349, 2.7102040816,
+    2.4057971014, 2.3971119134, 2.1146496815,
+    2.1282051282, 2.1146496815, 1.9880239521,
+    1.4067796610, 1.3280000000, 1.3174603175,
+    1.2205882353, 1.2296296296, 1.1369863014,
+    0.9822485207, 1.0709677419, 1.0000000000,
+    1.0849673203, 1.1369863014, 1.1773049645,
+    1.1066666667, 1.0573248408, 0.9880952381,
+    0.9196675900, 0.9120879121, 0.8924731183
+  )
+  
+  tb_DOLB <- as.data.table( list( vfoto_mes, vDOLB) )
+  
+  colnames( tb_DOLB ) <- c( envg$PARAM$dataset_metadata$periodo, "DOLB" )
+  
+  dataset[tb_DOLB,
+          on = c(envg$PARAM$dataset_metadata$periodo),
+          (campos_monetarios) := .SD * i.DOLB,
+          .SDcols = campos_monetarios
+  ]
+  
+  cat( "fin drift_dolarb()\n")
 }
 
 #------------------------------------------------------------------------------
@@ -75,7 +116,7 @@ drift_rank_simple <- function(campos_drift) {
   {
     cat(campo, " ")
     dataset[, paste0(campo, "_rank") :=
-      (frank(get(campo), ties.method = "random") - 1) / (.N - 1), by = eval(envg$PARAM$dataset_metadata$periodo)]
+              (frank(get(campo), ties.method = "random") - 1) / (.N - 1), by = eval(envg$PARAM$dataset_metadata$periodo)]
     dataset[, (campo) := NULL]
   }
   cat( "fin drift_rank_simple()\n")
@@ -86,17 +127,17 @@ drift_rank_simple <- function(campos_drift) {
 # los negativos se rankean por su lado
 
 drift_rank_cero_fijo <- function(campos_drift) {
- 
+  
   cat( "inicio drift_rank_cero_fijo()\n")
   for (campo in campos_drift)
   {
     cat(campo, " ")
     dataset[get(campo) == 0, paste0(campo, "_rank") := 0]
     dataset[get(campo) > 0, paste0(campo, "_rank") :=
-      frank(get(campo), ties.method = "random") / .N, by = eval(envg$PARAM$dataset_metadata$periodo)]
-
+              frank(get(campo), ties.method = "random") / .N, by = eval(envg$PARAM$dataset_metadata$periodo)]
+    
     dataset[get(campo) < 0, paste0(campo, "_rank") :=
-      -frank(-get(campo), ties.method = "random") / .N, by = eval(envg$PARAM$dataset_metadata$periodo)]
+              -frank(-get(campo), ties.method = "random") / .N, by = eval(envg$PARAM$dataset_metadata$periodo)]
     dataset[, (campo) := NULL]
   }
   cat("\n")
@@ -105,15 +146,15 @@ drift_rank_cero_fijo <- function(campos_drift) {
 #------------------------------------------------------------------------------
 
 drift_estandarizar <- function(campos_drift) {
-
+  
   cat( "inicio drift_estandarizar()\n")
   for (campo in campos_drift)
   {
     cat(campo, " ")
     dataset[, paste0(campo, "_normal") := 
-      (get(campo) -mean(campo, na.rm=TRUE)) / sd(get(campo), na.rm=TRUE),
-      by = eval(envg$PARAM$dataset_metadata$periodo)]
-
+              (get(campo) -mean(campo, na.rm=TRUE)) / sd(get(campo), na.rm=TRUE),
+            by = eval(envg$PARAM$dataset_metadata$periodo)]
+    
     dataset[, (campo) := NULL]
   }
   cat( "fin drift_estandarizar()\n")
@@ -121,7 +162,7 @@ drift_estandarizar <- function(campos_drift) {
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 # Aqui comienza el programa
-cat( "z1401_DR_corregir_drifting.r  START\n")
+cat( "1401_DR_corregir_drifting_TC.r  START\n")
 action_inicializar() 
 
 # cargo el dataset donde voy a entrenar
@@ -145,16 +186,17 @@ setorderv(dataset, envg$PARAM$dataset_metadata$primarykey)
 #  estos son los campos que expresan variables monetarias
 campos_monetarios <- colnames(dataset)
 campos_monetarios <- campos_monetarios[campos_monetarios %like%
-  "^(m|Visa_m|Master_m|vm_m)"]
+                                         "^(m|Visa_m|Master_m|vm_m)"]
 
 # aqui aplico un metodo para atacar el data drifting
 # hay que probar experimentalmente cual funciona mejor
 switch(envg$PARAM$metodo,
-  "ninguno"        = cat("No hay correccion del data drifting"),
-  "rank_simple"    = drift_rank_simple(campos_monetarios),
-  "rank_cero_fijo" = drift_rank_cero_fijo(campos_monetarios),
-  "deflacion"      = drift_deflacion(campos_monetarios),
-  "estandarizar"   = drift_estandarizar(campos_monetarios)
+       #  "ninguno"        = cat("No hay correccion del data drifting"),
+       #  "rank_simple"    = drift_rank_simple(campos_monetarios),
+       #  "rank_cero_fijo" = drift_rank_cero_fijo(campos_monetarios),
+       #  "deflacion"      = drift_deflacion(campos_monetarios),
+       #  "estandarizar"   = drift_estandarizar(campos_monetarios)
+       "dolarb"      = drift_dolarb(campos_monetarios),
 )
 
 
@@ -163,16 +205,16 @@ switch(envg$PARAM$metodo,
 cat( "escritura del dataset\n")
 cat( "Iniciando grabado del dataset\n" )
 fwrite(dataset,
-  file = "dataset.csv.gz",
-  logical01 = TRUE,
-  sep = ","
+       file = "dataset.csv.gz",
+       logical01 = TRUE,
+       sep = ","
 )
 cat( "Finalizado grabado del dataset\n" )
 
 # copia la metadata sin modificar
 cat( "escritura de metadata\n")
 write_yaml( envg$PARAM$dataset_metadata, 
-  file="dataset_metadata.yml" )
+            file="dataset_metadata.yml" )
 
 #------------------------------------------------------------------------------
 
@@ -190,8 +232,8 @@ tb_campos <- as.data.table(list(
 ))
 
 fwrite(tb_campos,
-  file = "dataset.campos.txt",
-  sep = "\t"
+       file = "dataset.campos.txt",
+       sep = "\t"
 )
 
 #------------------------------------------------------------------------------
@@ -207,4 +249,4 @@ GrabarOutput()
 #  archivos tiene a los files que debo verificar existen para no abortar
 
 action_finalizar( archivos = c("dataset.csv.gz","dataset_metadata.yml")) 
-cat( "1401_DR_corregir_drifting_custom.r  END\n")
+cat( "1401_DR_corregir_drifting_TC.r  END\n")
