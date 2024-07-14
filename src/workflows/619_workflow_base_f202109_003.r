@@ -415,7 +415,7 @@ KA_evaluate_kaggle <- function( pinputexps )
 # Que predice 202107 donde conozco la clase
 # y ya genera graficos
 
-wf_septiembre <- function( pnombrewf, metodo_df )
+wf_septiembre <- function( pnombrewf, metodo_dr )
 {
   param_local <- exp_wf_init( pnombrewf ) # linea fija
 
@@ -442,7 +442,7 @@ wf_septiembre <- function( pnombrewf, metodo_df )
 
 # llamo al workflow con future = 202109
 for (metodo_param in c( "dolarb" )) {
-  wf_septiembre(metodo_pama)  
+  wf_septiembre(metodo_dr=metodo_param)  
 } 
 
 
