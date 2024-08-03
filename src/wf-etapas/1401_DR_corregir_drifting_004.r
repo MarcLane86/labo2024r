@@ -195,7 +195,7 @@ switch(envg$PARAM$metodo,
          "rank_simple"    = drift_rank_simple(campos_monetarios),
          "rank_cero_fijo" = drift_rank_cero_fijo(campos_monetarios),
          "deflacion"      = drift_deflacion(campos_monetarios),
-         "estandarizar"   = drift_estandarizar(campos_monetarios)
+         "estandarizar"   = drift_estandarizar(campos_monetarios),
          "dolarb"      = drift_dolarb(campos_monetarios),
 )
 
@@ -249,4 +249,4 @@ GrabarOutput()
 #  archivos tiene a los files que debo verificar existen para no abortar
 
 action_finalizar( archivos = c("dataset.csv.gz","dataset_metadata.yml")) 
-cat( "1401_DR_corregir_drifting_003.r  END\n")
+cat( "1401_DR_corregir_drifting_004.r  END\n")
