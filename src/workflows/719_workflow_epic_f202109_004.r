@@ -309,7 +309,7 @@ HT_tuning_epic <- function( pinputexps, bypass=FALSE)
   param_local$train$gan0 <-  -3000
   param_local$train$meseta <- 2001
   param_local$train$repeticiones_exp <- 1
-  param_local$train$semillerio <- 1  # 1 es no usar semillerio en la Bayesian Optimi
+  param_local$train$semillerio <- 3  # 1 es no usar semillerio en la Bayesian Optimi
 
   # Hiperparametros  del LightGBM
   #  los que tienen un solo valor son los que van fijos
@@ -438,7 +438,7 @@ wf_septiembre <- function( pnombrewf )
   DR_drifting_base(metodo="dolarb")
   FEhist_base()
   FErf_attributes_base()
-  CN_canaritos_asesinos_base(ratio=0.2, desvio=0.5)
+  CN_canaritos_asesinos_base(ratio=0.2, desvio=0.7)
 
   ts9 <- TS_strategy_base9()
   ht <- HT_tuning_epic()
